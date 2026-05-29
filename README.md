@@ -1,8 +1,14 @@
 # slidedeck
 
-Framework liviano para presentaciones en HTML — un solo `deck.css` + `deck.js`, sin build.
+Framework liviano y **libre** para presentaciones en HTML — un solo `deck.css` + `deck.js`, sin build.
 
-Pensado para escribir slides como HTML plano y obtener gratis: tema claro/oscuro (recordado), selector de tamaño, navegador de miniaturas (capítulo · tema), botón de copiar en los bloques de código, navegación por teclado/clic/hash y exportación a PDF.
+Escribís las slides como HTML plano y el framework aporta el resto: tema claro/oscuro (recordado), selector de tamaño, navegador de miniaturas (capítulo · tema), botón de copiar en los bloques de código, navegación por teclado/clic/hash y exportación a PDF.
+
+![slidedeck en modo claro](demo-light.png)
+
+![slidedeck en modo oscuro, con el navegador de miniaturas](demo-dark.png)
+
+**Demo en vivo:** https://spktro.github.io/slidedeck/demo.html
 
 ## Uso
 

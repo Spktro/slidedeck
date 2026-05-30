@@ -18,94 +18,103 @@
 (function () {
   "use strict";
 
+  /* ------------------------------------------------------------------ */
+  /* Utilidades                                                          */
+  /* ------------------------------------------------------------------ */
+
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);
   }
 
-  ready(function () {
-    const deck = document.getElementById("deck") || document.querySelector(".deck");
-    if (!deck) return;
-    const slides = Array.from(deck.querySelectorAll(".slide"));
-    if (!slides.length) return;
+  function el(tag, cls, parent) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (parent) parent.appendChild(node);
+    return node;
+  }
 
-    const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  /* ------------------------------------------------------------------ */
+  /* Construcción del chrome (cada función devuelve lo que se necesita)  */
+  /* ------------------------------------------------------------------ */
 
-    /* ---------- Chrome ---------- */
-    // Barra de progreso
-    const progress = el("div", "progress");
-    document.body.appendChild(progress);
+  function buildProgress() {
+    return el("div", "progress", document.body);
+  }
 
-    // Link al índice
-    const homeHref = deck.dataset.home;
-    if (homeHref) {
-      const a = document.createElement("a");
-      a.className = "home-link";
-      a.href = homeHref;
-      a.textContent = "← Índice";
-      document.body.appendChild(a);
-    }
+  function buildHomeLink(href) {
+    if (!href) return;
+    const a = el("a", "home-link", document.body);
+    a.href = href;
+    a.textContent = "← Índice";
+  }
 
-    // Barra superior: tema + selector de tamaño
+  // Barra superior: toggle de tema + selector de tamaño.
+  // Devuelve { sizer, themeBtn } para que las features los cableen.
+  function buildTopBar() {
     const sizer = el("div", "sizer");
-    const themeBtn = el("button", "theme-toggle");
+    const themeBtn = el("button", "theme-toggle", sizer);
     themeBtn.type = "button";
     themeBtn.title = "Modo claro / oscuro";
     themeBtn.setAttribute("aria-label", "Cambiar tema");
-    sizer.appendChild(themeBtn);
-    sizer.appendChild(el("span", "sizer-div"));
-    const lbl = el("span", "lbl");
-    lbl.textContent = "Tamaño";
-    sizer.appendChild(lbl);
+
+    el("span", "sizer-div", sizer);
+    el("span", "lbl", sizer).textContent = "Tamaño";
+
     const SIZES = [["fit", "Ajustar"], ["m", "Cómodo"], ["l", "Grande"], ["xl", "Enorme"]];
     SIZES.forEach(([id, label]) => {
-      const b = el("button");
+      const b = el("button", null, sizer);
       b.dataset.size = id;
       b.textContent = label;
-      sizer.appendChild(b);
     });
+
     document.body.appendChild(sizer);
+    return { sizer, themeBtn };
+  }
 
-    // Marca (pie izquierdo)
-    const brandText = deck.dataset.brand;
-    if (brandText) {
-      const brand = el("div", "brand");
-      const idx = brandText.indexOf(" · ");
-      if (idx > -1) {
-        const b = document.createElement("b");
-        b.textContent = brandText.slice(0, idx);
-        brand.appendChild(b);
-        brand.appendChild(document.createTextNode(brandText.slice(idx)));
-      } else {
-        brand.textContent = brandText;
-      }
-      document.body.appendChild(brand);
+  function buildBrand(text) {
+    if (!text) return;
+    const brand = el("div", "brand", document.body);
+    const idx = text.indexOf(" · ");
+    if (idx > -1) {
+      el("b", null, brand).textContent = text.slice(0, idx);
+      brand.appendChild(document.createTextNode(text.slice(idx)));
+    } else {
+      brand.textContent = text;
     }
+  }
 
-    // Paginador
-    const pager = el("div", "pager");
-    const cur = document.createElement("span");
-    const total = document.createElement("span");
+  // Devuelve el <span> del número actual, que actualiza la navegación.
+  function buildPager(count) {
+    const pager = el("div", "pager", document.body);
+    const cur = el("span", null, pager);
     cur.textContent = "1";
-    total.textContent = slides.length;
-    pager.appendChild(cur);
     pager.appendChild(document.createTextNode(" / "));
-    pager.appendChild(total);
-    document.body.appendChild(pager);
+    el("span", null, pager).textContent = count;
+    return cur;
+  }
 
-    /* ---------- Botón "Copiar" en cada bloque de código ---------- */
-    deck.querySelectorAll("pre.code").forEach((pre) => {
+  /* ------------------------------------------------------------------ */
+  /* Features                                                            */
+  /* ------------------------------------------------------------------ */
+
+  // Botón "Copiar" en cada bloque de código.
+  function setupCopyButtons(root) {
+    root.querySelectorAll("pre.code").forEach((pre) => {
       const wrap = el("div", "code-wrap");
       pre.parentNode.insertBefore(wrap, pre);
       wrap.appendChild(pre);
-      const btn = el("button", "copy-btn");
+
+      const btn = el("button", "copy-btn", wrap);
       btn.type = "button";
       btn.textContent = "Copiar";
+
       const flash = (txt, ok) => {
         btn.textContent = txt;
         btn.classList.toggle("copied", !!ok);
         setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("copied"); }, 1500);
       };
+
       btn.addEventListener("click", async (e) => {
         e.stopPropagation();
         try {
@@ -124,29 +133,32 @@
           } catch (_) { flash("Error", false); }
         }
       });
-      wrap.appendChild(btn);
     });
+  }
 
-    /* ---------- Tema claro / oscuro (compartido vía localStorage) ---------- */
+  // Tema claro / oscuro, recordado en localStorage y sincronizado entre pestañas.
+  function setupTheme(themeBtn) {
     let theme = localStorage.getItem("deckTheme") || "light";
-    function applyTheme() {
+    const apply = () => {
       document.documentElement.setAttribute("data-theme", theme);
       themeBtn.textContent = theme === "dark" ? "☀️" : "🌙";
-    }
+    };
     themeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       theme = theme === "dark" ? "light" : "dark";
       localStorage.setItem("deckTheme", theme);
-      applyTheme();
+      apply();
     });
     window.addEventListener("storage", (e) => {
-      if (e.key === "deckTheme" && e.newValue) { theme = e.newValue; applyTheme(); }
+      if (e.key === "deckTheme" && e.newValue) { theme = e.newValue; apply(); }
     });
-    applyTheme();
+    apply();
+  }
 
-    /* ---------- Selector de tamaño (escala el lienzo 1280x720) ---------- */
+  // Selector de tamaño: escala el lienzo 1280x720 vía la variable CSS --fit.
+  function setupSizing(sizer) {
     let sizeId = localStorage.getItem("deckSize") || "m";
-    function computeFit() {
+    const compute = () => {
       const fw = window.innerWidth / 1280;
       const fh = window.innerHeight / 720;
       let z;
@@ -155,39 +167,82 @@
       else if (sizeId === "xl") z = fw * 1.4;
       else z = fw;
       document.documentElement.style.setProperty("--fit", z.toFixed(3));
-    }
-    function syncSizer() {
+    };
+    const syncButtons = () => {
       sizer.querySelectorAll("button[data-size]").forEach((b) => b.classList.toggle("on", b.dataset.size === sizeId));
-    }
+    };
     sizer.querySelectorAll("button[data-size]").forEach((b) => {
       b.addEventListener("click", (e) => {
         e.stopPropagation();
         sizeId = b.dataset.size;
         localStorage.setItem("deckSize", sizeId);
-        computeFit();
-        syncSizer();
+        compute();
+        syncButtons();
       });
     });
-    window.addEventListener("resize", computeFit);
-    computeFit();
-    syncSizer();
+    window.addEventListener("resize", compute);
+    compute();
+    syncButtons();
+  }
 
-    /* ---------- Navegación ---------- */
-    let thumbEls = [];
-    let i = 0;
-    function show(idx) {
-      i = Math.max(0, Math.min(slides.length - 1, idx));
+  // Navegador lateral de miniaturas (clones escalados con capítulo · tema).
+  // onSelect(n) se llama al clickear una miniatura. Devuelve el array de thumbs.
+  function buildFilmstrip(slides, onSelect) {
+    const film = el("div", "filmstrip");
+    const hot = el("div", "filmstrip-hot");
+    const thumbs = [];
+
+    slides.forEach((s, n) => {
+      const thumb = el("button", "thumb", film);
+      thumb.type = "button";
+
+      const frame = el("div", "thumb-frame", thumb);
+      const canvas = el("div", "thumb-canvas", frame);
+      const clone = s.cloneNode(true);
+      clone.classList.remove("active");
+      clone.classList.add("thumb-slide");
+      clone.removeAttribute("id");
+      clone.querySelectorAll(".copy-btn").forEach((b) => b.remove());
+      canvas.appendChild(clone);
+      el("span", "thumb-num", frame).textContent = n + 1;
+
+      const chapter = s.dataset.chapter || (s.querySelector(".slide-eyebrow") || {}).textContent || "";
+      const topic = s.dataset.topic || (s.querySelector(".slide-title, .title") || {}).textContent || "";
+      const label = el("div", "thumb-label", thumb);
+      if (chapter) el("span", "thumb-chapter", label).textContent = chapter;
+      if (topic) el("span", "thumb-topic", label).textContent = topic;
+
+      thumb.addEventListener("click", (e) => { e.stopPropagation(); onSelect(n); });
+      thumbs.push(thumb);
+    });
+
+    document.body.appendChild(film);
+    document.body.appendChild(hot);
+    hot.addEventListener("mouseenter", () => film.classList.add("open"));
+    film.addEventListener("mouseleave", () => film.classList.remove("open"));
+    return thumbs;
+  }
+
+  // Crea la función show() que cambia de slide y actualiza progreso/pager/thumbs.
+  // `state` lleva el índice actual y (cuando exista) el array de thumbs.
+  function makeShow(slides, state, refs) {
+    return function show(idx) {
+      const i = Math.max(0, Math.min(slides.length - 1, idx));
+      state.i = i;
       slides.forEach((s, n) => s.classList.toggle("active", n === i));
-      cur.textContent = i + 1;
-      progress.style.width = ((i + 1) / slides.length * 100) + "%";
+      refs.cur.textContent = i + 1;
+      refs.progress.style.width = ((i + 1) / slides.length * 100) + "%";
       if (location.hash !== "#" + (i + 1)) history.replaceState(null, "", "#" + (i + 1));
-      thumbEls.forEach((t, n) => t.classList.toggle("current", n === i));
-      if (thumbEls[i]) thumbEls[i].scrollIntoView({ block: "nearest" });
-    }
+      state.thumbs.forEach((t, n) => t.classList.toggle("current", n === i));
+      if (state.thumbs[i]) state.thumbs[i].scrollIntoView({ block: "nearest" });
+    };
+  }
 
+  // Teclado, clic por mitades, hashchange y posición inicial.
+  function setupInput(show, slides, state) {
     document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { show(i + 1); e.preventDefault(); }
-      else if (e.key === "ArrowLeft" || e.key === "PageUp") { show(i - 1); e.preventDefault(); }
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { show(state.i + 1); e.preventDefault(); }
+      else if (e.key === "ArrowLeft" || e.key === "PageUp") { show(state.i - 1); e.preventDefault(); }
       else if (e.key === "Home") { show(0); }
       else if (e.key === "End") { show(slides.length - 1); }
     });
@@ -195,7 +250,7 @@
     document.addEventListener("click", (e) => {
       if (e.target.closest("a, pre, code, input, button, .filmstrip")) return;
       const x = e.clientX / window.innerWidth;
-      if (x > 0.5) show(i + 1); else show(i - 1);
+      if (x > 0.5) show(state.i + 1); else show(state.i - 1);
     });
 
     window.addEventListener("hashchange", () => {
@@ -203,46 +258,38 @@
       if (!isNaN(n)) show(n - 1);
     });
 
-    /* ---------- Filmstrip (miniaturas con capítulo · tema) ---------- */
-    (function buildFilmstrip() {
-      const film = el("div", "filmstrip");
-      const hot = el("div", "filmstrip-hot");
-      slides.forEach((s, n) => {
-        const thumb = el("button", "thumb");
-        thumb.type = "button";
-        const frame = el("div", "thumb-frame");
-        const canvas = el("div", "thumb-canvas");
-        const clone = s.cloneNode(true);
-        clone.classList.remove("active");
-        clone.classList.add("thumb-slide");
-        clone.removeAttribute("id");
-        clone.querySelectorAll(".copy-btn").forEach((b) => b.remove());
-        canvas.appendChild(clone);
-        frame.appendChild(canvas);
-        const num = el("span", "thumb-num");
-        num.textContent = n + 1;
-        frame.appendChild(num);
-        thumb.appendChild(frame);
-
-        const chapter = s.dataset.chapter || (s.querySelector(".slide-eyebrow") || {}).textContent || "";
-        const topic = s.dataset.topic || (s.querySelector(".slide-title, .title") || {}).textContent || "";
-        const label = el("div", "thumb-label");
-        if (chapter) { const c = el("span", "thumb-chapter"); c.textContent = chapter; label.appendChild(c); }
-        if (topic) { const t = el("span", "thumb-topic"); t.textContent = topic; label.appendChild(t); }
-        thumb.appendChild(label);
-
-        thumb.addEventListener("click", (e) => { e.stopPropagation(); show(n); });
-        film.appendChild(thumb);
-        thumbEls.push(thumb);
-      });
-      document.body.appendChild(film);
-      document.body.appendChild(hot);
-      hot.addEventListener("mouseenter", () => film.classList.add("open"));
-      film.addEventListener("mouseleave", () => film.classList.remove("open"));
-    })();
-
-    /* ---------- Inicio ---------- */
     const initial = parseInt((location.hash || "#1").slice(1), 10);
     show(isNaN(initial) ? 0 : initial - 1);
-  });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Orquestación                                                        */
+  /* ------------------------------------------------------------------ */
+
+  function init() {
+    const deck = document.getElementById("deck") || document.querySelector(".deck");
+    if (!deck) return;
+    const slides = Array.from(deck.querySelectorAll(".slide"));
+    if (!slides.length) return;
+
+    // Chrome
+    const progress = buildProgress();
+    buildHomeLink(deck.dataset.home);
+    const { sizer, themeBtn } = buildTopBar();
+    buildBrand(deck.dataset.brand);
+    const cur = buildPager(slides.length);
+
+    // Features independientes
+    setupCopyButtons(deck);
+    setupTheme(themeBtn);
+    setupSizing(sizer);
+
+    // Navegación + filmstrip (resuelven su dependencia mutua vía `state`)
+    const state = { i: 0, thumbs: [] };
+    const show = makeShow(slides, state, { progress, cur });
+    state.thumbs = buildFilmstrip(slides, show);
+    setupInput(show, slides, state);
+  }
+
+  ready(init);
 })();

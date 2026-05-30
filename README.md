@@ -8,7 +8,7 @@ Escribís las slides como HTML plano y el framework aporta el resto: tema claro/
 
 ![slidedeck en modo oscuro, con el navegador de miniaturas](demo-dark.png)
 
-**Demo en vivo:** https://spktro.github.io/slidedeck/
+**Demo en vivo:** https://spktro.github.io/slidedeck/demo.html
 
 ## Uso
 

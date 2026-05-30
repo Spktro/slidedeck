@@ -45,6 +45,7 @@ La primera slide debe llevar la clase `active`.
 |----------|-------|----------|
 | `data-brand` | `.deck` | Marca del pie. Lo anterior al primer `· ` se muestra en negrita. |
 | `data-home`  | `.deck` | href del botón "← Índice". Si se omite, no aparece. |
+| `data-repo`  | `.deck` | URL del repositorio: muestra un ícono de GitHub junto a la marca. |
 | `data-chapter` | `.slide` | Agrupador mostrado en el navegador de miniaturas. |
 | `data-topic` | `.slide` | Tema de la slide en el navegador. |
 

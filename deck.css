@@ -371,8 +371,12 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     user-select: none;
+    display: flex; align-items: center; gap: 9px;
   }
   .brand b { color: var(--accent); }
+  .repo-link { display: inline-flex; color: var(--muted); text-decoration: none; }
+  .repo-link:hover { color: var(--accent); }
+  .repo-link svg { display: block; width: 17px; height: 17px; }
 
   .progress {
     position: fixed;

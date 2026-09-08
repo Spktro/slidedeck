@@ -46,6 +46,7 @@ La primera slide debe llevar la clase `active`.
 | `data-brand` | `.deck` | Marca del pie. Lo anterior al primer `· ` se muestra en negrita. |
 | `data-home`  | `.deck` | href del botón "← Índice". Si se omite, no aparece. |
 | `data-repo`  | `.deck` | URL del repositorio: muestra un ícono de GitHub junto a la marca. |
+| `data-click-nav` | `.deck` | `off` desactiva la navegación por clic en mitades (teclado, hash y miniaturas siguen andando). |
 | `data-chapter` | `.slide` | Agrupador mostrado en el navegador de miniaturas. |
 | `data-topic` | `.slide` | Tema de la slide en el navegador. |
 
@@ -59,9 +60,12 @@ La primera slide debe llevar la clase `active`.
 ## Atajos
 
 `→` / `Espacio` siguiente · `←` atrás · `Inicio` / `Fin` · clic en mitad izq/der · `#N` en la URL.
+Seleccionar texto con el mouse no cambia de slide.
 Export a PDF: `Ctrl/Cmd + P`.
 
 ## Versionado
+
+Los cambios por versión están en [CHANGELOG.md](CHANGELOG.md).
 
 Fijá una versión en la URL del CDN (`@v1`, `@v1.0.0`, o un commit) para estabilidad.
 Ver `demo.html` para un ejemplo completo.

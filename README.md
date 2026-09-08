@@ -59,8 +59,8 @@ La primera slide debe llevar la clase `active`.
 
 ## Atajos
 
-`→` / `Espacio` siguiente · `←` atrás · `Inicio` / `Fin` · clic en mitad izq/der · `#N` en la URL.
-Seleccionar texto con el mouse no cambia de slide.
+`→` / `Espacio` siguiente · `←` atrás · `Inicio` / `Fin` · clic en el fondo de la slide, mitad izq/der · `#N` en la URL.
+El clic solo navega si cae en el fondo, no sobre texto: seleccionar (arrastre, doble o triple clic) no cambia de slide.
 Export a PDF: `Ctrl/Cmd + P`.
 
 ## Versionado
